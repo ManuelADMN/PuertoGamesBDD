@@ -1,0 +1,140 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>PuertoGames – Login</title>
+
+  <!-- Tailwind (solo para desarrollo) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- SweetAlert2 CSS (imprescindible para ver los pop-ups) -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-sm space-y-6">
+    <!-- Pestañas -->
+    <div class="flex justify-around mb-4">
+      <button class="tab-btn border-b-2 border-blue-600" data-tab="loginTab">Entrar</button>
+      <button class="tab-btn border-b-2 border-transparent" data-tab="regTab">Registrarse</button>
+    </div>
+
+    <!-- ============ Login ============ -->
+    <form id="loginTab" class="tab space-y-4">
+      <input name="email" type="email" placeholder="Correo"
+             class="w-full border rounded px-3 py-2" required>
+      <div class="relative">
+        <input name="password" type="password" placeholder="Contraseña"
+               class="w-full border rounded px-3 py-2 pr-10" required>
+        <button type="button"
+                class="toggle-pwd absolute right-2 top-2 text-sm text-gray-500">👁️</button>
+      </div>
+      <button class="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700">Entrar</button>
+    </form>
+
+    <!-- ============ Registro ============ -->
+    <form id="regTab" class="tab hidden space-y-4">
+      <input name="email" type="email" placeholder="Correo"
+             class="w-full border rounded px-3 py-2" required>
+      <div class="relative">
+        <input name="password" type="password" placeholder="Contraseña"
+               class="w-full border rounded px-3 py-2 pr-10" required>
+        <button type="button"
+                class="toggle-pwd absolute right-2 top-2 text-sm text-gray-500">👁️</button>
+      </div>
+      <div class="relative">
+        <input name="password2" type="password" placeholder="Repite contraseña"
+               class="w-full border rounded px-3 py-2 pr-10" required>
+        <button type="button"
+                class="toggle-pwd absolute right-2 top-2 text-sm text-gray-500">👁️</button>
+      </div>
+      <button class="bg-green-600 text-white w-full py-2 rounded hover:bg-green-700">Crear cuenta</button>
+    </form>
+  </div>
+
+  <!-- Lógica -->
+  <script type="module">
+    import { SUPABASE_URL, HEADERS }   from './assets/supa.js';
+    import { alertError, alertInfo,
+             alertSuccess, showLoader, closeLoader } from './assets/alert.js';
+
+    /* ---- Tabs ---- */
+    const showTab = id => {
+      console.log('🐞 tab ->', id);
+      document.querySelectorAll('.tab').forEach(t => t.classList.add('hidden'));
+      document.getElementById(id)?.classList.remove('hidden');
+      document.querySelectorAll('.tab-btn')
+        .forEach(b => b.classList.toggle('border-blue-600', b.dataset.tab === id));
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      /* Botones pestaña */
+      document.querySelectorAll('.tab-btn')
+        .forEach(btn => btn.onclick = () => {
+          console.log('🐞 click tab-btn', btn.dataset.tab);
+          showTab(btn.dataset.tab);
+        });
+      showTab('loginTab');
+
+      /* Mostrar / ocultar contraseña */
+      document.querySelectorAll('.toggle-pwd')
+        .forEach(btn => btn.onclick = () => {
+          const inp = btn.previousElementSibling;
+          inp.type = inp.type === 'password' ? 'text' : 'password';
+        });
+
+      /* ========== LOGIN ========== */
+      document.getElementById('loginTab').addEventListener('submit', async e => {
+        e.preventDefault();
+        const f     = e.target,
+              email = f.email.value.trim().toLowerCase(),
+              pass  = f.password.value;
+
+        console.log('🐞 login payload', { correo_input: email, password_input: pass });
+        showLoader();
+        const res  = await fetch(`${SUPABASE_URL}/rest/v1/rpc/verificar_password`, {
+          method : 'POST',
+          headers: HEADERS,
+          body   : JSON.stringify({ correo_input: email, password_input: pass })
+        });
+        console.log('🐞 login status', res.status);
+        const data = await res.json();
+        console.log('🐞 login response', data);
+        closeLoader();
+
+        if (!data.success) return alertError(data.message);
+        localStorage.setItem('usuario', JSON.stringify(data.usuario));
+        alertSuccess('Bienvenido', () => location = 'dashboard.html');
+      });
+
+      /* ========== REGISTRO ========== */
+      document.getElementById('regTab').addEventListener('submit', async e => {
+        e.preventDefault();
+        const f     = e.target,
+              email = f.email.value.trim().toLowerCase(),
+              p1    = f.password.value,
+              p2    = f.password2.value;
+
+        if (p1 !== p2) return alertInfo('Las contraseñas no coinciden');
+
+        console.log('🐞 registro payload', { p_email: email, p_pass: p1 });
+        showLoader('Creando usuario…');
+        const res  = await fetch(`${SUPABASE_URL}/rest/v1/rpc/fn_registrar_usuario`, {
+          method : 'POST',
+          headers: HEADERS,
+          body   : JSON.stringify({ p_email: email, p_pass: p1 })
+        });
+        console.log('🐞 registro status', res.status);
+        const data = await res.json();
+        console.log('🐞 registro response', data);
+        closeLoader();
+
+        if (!data.success) return alertError(data.message);
+        alertSuccess('Cuenta creada', () => { f.reset(); showTab('loginTab'); });
+      });
+    });
+  </script>
+</body>
+</html>

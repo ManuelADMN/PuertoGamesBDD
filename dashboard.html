@@ -1,0 +1,133 @@
+<!-- public/dashboard.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+
+  <!-- Tailwind CDN (dev) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- SweetAlert2 CSS -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- --------------- Barra superior ---------------- -->
+  <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">📊 Dashboard Puerto Games</h1>
+    <div>
+      <span id="saludo" class="mr-4"></span>
+      <button id="logout"
+              class="bg-red-500 px-3 py-1 rounded hover:bg-red-600">Salir</button>
+    </div>
+  </header>
+
+  <!-- --------------- Contenido ---------------- -->
+  <main class="flex-1 p-6 grid gap-8
+               md:grid-cols-2        <!-- 2 columnas en pantallas ≥ md -->
+               grid-cols-1">         <!-- 1 columna en móviles -->
+
+    <!-- Tarjeta 1 -->
+    <div class="bg-white shadow rounded-xl p-4">
+      <h2 class="font-semibold mb-4 text-center">Stock por plataforma</h2>
+      <!-- El wrapper define el alto; Chart.js se ajusta con maintainAspectRatio:false -->
+      <div class="h-72">
+        <canvas id="grafPlata" class="w-full h-full"></canvas>
+      </div>
+    </div>
+
+    <!-- Tarjeta 2 -->
+    <div class="bg-white shadow rounded-xl p-4">
+      <h2 class="font-semibold mb-4 text-center">Stock por género</h2>
+      <div class="h-72">
+        <canvas id="grafGenero" class="w-full h-full"></canvas>
+      </div>
+    </div>
+  </main>
+
+  <!-- --------------- JS ---------------- -->
+  <script type="module">
+    import { SUPABASE_URL, HEADERS }   from './assets/supa.js';
+    import { alertError, alertInfo,
+             alertConfirm, showLoader, closeLoader } from './assets/alert.js';
+
+    /* --- Ruta protegida --- */
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    if (!usuario) location = 'index.html';
+
+    window.addEventListener('DOMContentLoaded', cargar);
+
+    async function cargar () {
+      document.getElementById('saludo').textContent = usuario.email;
+      showLoader('Cargando gráficos…');
+
+      /* RPC stock plataforma */
+      const rPlata  = fetch(`${SUPABASE_URL}/rest/v1/rpc/fn_stock_plataformas`,
+                            { method:'POST', headers: HEADERS, body:'{}' });
+
+      /* RPC stock géneros */
+      const rGenero = fetch(`${SUPABASE_URL}/rest/v1/rpc/fn_stock_generos`,
+                            { method:'POST', headers: HEADERS, body:'{}' });
+
+      /* Esperar ambas */
+      const [resPl, resGn] = await Promise.all([rPlata, rGenero]);
+      closeLoader();
+
+      if (!resPl.ok || !resGn.ok)
+        return alertError('No se pudo cargar datos');
+
+      /* ------------------ Gráfico 1 ------------------ */
+      const datosPl = await resPl.json();
+      new Chart(document.getElementById('grafPlata'), {
+        type : 'bar',
+        data : {
+          labels   : datosPl.map(d => d.nombre_plataforma),
+          datasets : [{
+            label           : 'Unidades',
+            data            : datosPl.map(d => d.total),
+            backgroundColor : 'rgba(59,130,246,0.5)',
+            borderColor     : 'rgba(59,130,246,1)',
+            borderWidth     : 1,
+          }]
+        },
+        options : {
+          responsive        : true,
+          maintainAspectRatio: false,      // ← llena el wrapper de  h-72
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+
+      /* ------------------ Gráfico 2 ------------------ */
+      const datosGn = await resGn.json();
+      new Chart(document.getElementById('grafGenero'), {
+        type : 'doughnut',
+        data : {
+          labels   : datosGn.map(d => d.nombre_genero),
+          datasets : [{ data: datosGn.map(d => d.total) }]
+        },
+        options : {
+          responsive         : true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+
+      alertInfo('Gráficos cargados');
+    }
+
+    /* --- Logout --- */
+    document.getElementById('logout').onclick = async () => {
+      if (await alertConfirm('¿Cerrar sesión?')) {
+        localStorage.clear();
+        location = 'index.html';
+      }
+    };
+  </script>
+</body>
+</html>
