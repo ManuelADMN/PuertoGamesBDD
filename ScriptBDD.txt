@@ -1,0 +1,288 @@
+/* ============================================================
+⚙️  LIMPIEZA (DROP IF EXISTS)
+============================================================ */
+drop view      if exists public.vista_prestamos_usuarios;
+drop view      if exists public.vista_stock_plataformas;
+drop function  if exists public.contar_prestamos_activos(text);
+drop function  if exists public.verificar_password(text,text);
+drop function  if exists public.fn_registrar_usuario(text,text);
+drop function  if exists public.fn_actualizar_stock(int,int);
+drop function  if exists public.fn_devolver_prestamo(int);
+drop function  if exists public.fn_stock_plataformas();
+drop table     if exists public.prestamos;
+drop table     if exists public.videojuegos;
+drop table     if exists public.generos;
+drop table     if exists public.plataformas;
+drop table     if exists public.usuarios;
+
+/* ============================================================
+🔌  EXTENSIÓN pgcrypto  (bcrypt, gen_salt, crypt…)
+============================================================ */
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+/* Ahora todas las funciones de pgcrypto viven en   extensions.*   */
+
+/* ============================================================
+🗄️  TABLAS
+============================================================ */
+create table public.usuarios (
+  id             serial primary key,
+  email          varchar(100) unique not null,
+  password_hash  text        not null,
+  rol            varchar(20) not null check (rol in ('usuario','admin')),
+  fecha_creacion timestamp   not null default now()
+);
+
+create table public.plataformas (
+  id     serial primary key,
+  nombre varchar(50) unique not null
+);
+
+create table public.generos (
+  id     serial primary key,
+  nombre varchar(50) unique not null
+);
+
+create table public.videojuegos (
+  id                serial primary key,
+  titulo            varchar(100) not null,
+  id_genero         int not null references public.generos(id),
+  id_plataforma     int not null references public.plataformas(id),
+  fecha_lanzamiento date,
+  stock             int default 1 check (stock >= 0)
+);
+
+create table public.prestamos (
+  id                 serial primary key,
+  id_usuario         int not null references public.usuarios(id),
+  id_videojuego      int not null references public.videojuegos(id),
+  fecha_prestamo     timestamp not null default now(),
+  fecha_devolucion   timestamp,
+  estado             varchar(20) not null check (estado in ('prestado','devuelto')),
+  fecha_modificacion timestamp not null default now()
+);
+
+/* ============================================================
+🔐  ROW-LEVEL SECURITY
+============================================================ */
+alter table public.usuarios enable row level security;
+
+create policy insert_anon on public.usuarios
+  for insert to anon with check (true);
+
+create policy select_self on public.usuarios
+  for select to anon
+  using ( email = current_setting('request.jwt.claims', true)::json->>'email' );
+
+/* ============================================================
+📥  DATOS DE EJEMPLO
+============================================================ */
+insert into public.plataformas (nombre) values
+ ('PC'), ('PlayStation 5'), ('Xbox Series X'), ('Nintendo Switch');
+
+insert into public.generos (nombre) values
+ ('Acción'), ('Aventura'), ('Rol'), ('Deportes'), ('Estrategia');
+
+insert into public.videojuegos (titulo,id_genero,id_plataforma,fecha_lanzamiento,stock) values
+ ('The Legend of Zelda: Breath of the Wild',2,4,'2017-03-03',3),
+ ('FIFA 23',                                  4,3,'2022-09-30',2),
+ ('Elden Ring',                               3,2,'2022-02-25',1),
+ ('Age of Empires IV',                        5,1,'2021-10-28',4);
+
+/* ============================================================
+🛠️  FUNCIONES RPC  (search_path = public, extensions)
+============================================================ */
+
+-- 1) Registro de usuario
+create or replace function public.fn_registrar_usuario(
+  p_email text,
+  p_pass  text
+)
+returns json
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_id int;
+begin
+  insert into public.usuarios (email, password_hash, rol)
+  values (lower(p_email),
+          crypt(p_pass, gen_salt('bf')),   -- ← ahora visible
+          'usuario')
+  returning id into v_id;
+
+  return json_build_object(
+    'success', true,
+    'usuario', json_build_object(
+      'id',    v_id,
+      'email', lower(p_email),
+      'rol',   'usuario'
+    )
+  );
+exception
+  when unique_violation then
+    return json_build_object(
+      'success', false,
+      'message', 'El correo ya está registrado'
+    );
+end;
+$$;
+grant execute on function public.fn_registrar_usuario(text,text)
+       to anon, authenticated;
+
+-- 2) Verificar contraseña
+create or replace function public.verificar_password(
+  correo_input   text,
+  password_input text
+)
+returns json
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare u_row public.usuarios%rowtype;
+begin
+  select * into u_row from public.usuarios
+  where email = lower(correo_input);
+
+  if not found then
+     return json_build_object('success',false,'message','Usuario no encontrado');
+  end if;
+
+  if crypt(password_input, u_row.password_hash) = u_row.password_hash then
+     return json_build_object(
+       'success', true,
+       'usuario', json_build_object(
+         'id',    u_row.id,
+         'email', u_row.email,
+         'rol',   u_row.rol
+       )
+     );
+  else
+     return json_build_object('success',false,'message','Credenciales inválidas');
+  end if;
+end;
+$$;
+grant execute on function public.verificar_password(text,text)
+       to anon, authenticated;
+
+-- 3) Contar préstamos activos
+create or replace function public.contar_prestamos_activos(correo text)
+returns int
+language plpgsql
+as $$
+declare cantidad int;
+begin
+  select count(*) into cantidad
+  from public.prestamos p
+  join public.usuarios u on u.id = p.id_usuario
+  where u.email = correo
+    and p.estado = 'prestado';
+  return cantidad;
+end;
+$$;
+
+-- 4) Actualizar stock manual
+create or replace function public.fn_actualizar_stock(p_id int, p_stock int)
+returns void
+language plpgsql
+as $$
+begin
+  update public.videojuegos set stock = p_stock where id = p_id;
+end;
+$$;
+
+-- 5) Devolver préstamo
+create or replace function public.fn_devolver_prestamo(p_prestamo int)
+returns void
+language plpgsql
+as $$
+begin
+  update public.prestamos
+  set    estado           = 'devuelto',
+         fecha_devolucion = now()
+  where  id = p_prestamo;
+
+  update public.videojuegos v
+  set    stock = stock + 1
+  from   public.prestamos p
+  where  p.id = p_prestamo
+    and  v.id = p.id_videojuego;
+end;
+$$;
+
+-- 6) Stock por plataforma
+create or replace function public.fn_stock_plataformas()
+returns table(nombre_plataforma text, total int)
+language sql
+as $$
+  select pl.nombre, sum(v.stock)
+  from   public.videojuegos v
+  join   public.plataformas pl on pl.id = v.id_plataforma
+  group  by pl.nombre;
+$$;
+grant execute on function public.fn_stock_plataformas() to anon;
+
+/* ============================================================
+🔄  TRIGGERS  (sin cambios respecto a tu versión)
+============================================================ */
+-- fecha modificación
+create or replace function public.tg_set_fecha_modificacion()
+returns trigger language plpgsql as $$
+begin
+  new.fecha_modificacion := now();
+  return new;
+end; $$;
+create trigger trg_fecha_modificacion
+before update on public.prestamos
+for each row execute procedure public.tg_set_fecha_modificacion();
+
+-- stock negativo
+create or replace function public.tg_prevent_stock_negativo()
+returns trigger language plpgsql as $$
+begin
+  if new.stock < 0 then raise exception 'Stock no puede ser negativo'; end if;
+  return new;
+end; $$;
+create trigger trg_prevent_stock_negativo
+before insert or update on public.videojuegos
+for each row execute procedure public.tg_prevent_stock_negativo();
+
+-- reducir stock
+create or replace function public.tg_reducir_stock()
+returns trigger language plpgsql as $$
+begin
+  update public.videojuegos set stock = stock - 1 where id = new.id_videojuego;
+  return new;
+end; $$;
+create trigger trg_reducir_stock_prestamo
+after insert on public.prestamos
+for each row execute procedure public.tg_reducir_stock();
+
+-- incrementar stock
+create or replace function public.tg_incrementar_stock()
+returns trigger language plpgsql as $$
+begin
+  if new.estado = 'devuelto' and old.estado <> 'devuelto' then
+    update public.videojuegos set stock = stock + 1 where id = new.id_videojuego;
+  end if;
+  return new;
+end; $$;
+create trigger trg_incrementar_stock_devolucion
+after update on public.prestamos
+for each row execute procedure public.tg_incrementar_stock();
+
+/* ============================================================
+👁️‍🗨️  VISTAS
+============================================================ */
+create or replace view public.vista_prestamos_usuarios as
+select u.email, v.titulo as juego, p.fecha_prestamo, p.estado
+from   public.prestamos p
+join   public.usuarios  u on u.id = p.id_usuario
+join   public.videojuegos v on v.id = p.id_videojuego;
+
+create or replace view public.vista_stock_plataformas as
+select * from public.fn_stock_plataformas();
+
+/* ====================== ✅ FIN SCRIPT ====================== */
