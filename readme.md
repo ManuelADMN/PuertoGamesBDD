@@ -1,4 +1,4 @@
-# 🎮 Videoclub – Supabase Starter
+# 🎮 PuertoGames – Supabase BDD
 
 Proyecto demostrativo que cumple **todos** los requisitos del enunciado:
 
