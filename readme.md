@@ -42,7 +42,7 @@
     <tr><td>4‑d</td><td>≥ 4 triggers</td><td>✅</td><td><code>tg_set_fecha_modificacion</code>, <code>tg_prevent_stock_negativo</code>, …</td></tr>
     <tr><td>4‑e</td><td>≥ 4 procedures</td><td>✅</td><td><code>sp_prestar_juego</code>, <code>sp_devolver_juego</code>, …</td></tr>
     <tr><td>5</td><td>≥ 2 tecnologías extra</td><td>✅</td><td>Tailwind CSS, SweetAlert2, DataTables.js, Day.js</td></tr>
-    <tr><td>6</td><td>README profesional</td><td>🤏</td><td>¡Estás leyéndolo! <em>Añade tus capturas si falta.</em></td></tr>
+    <tr><td>6</td><td>README profesional</td><td>✅</td><td>¡Estás leyéndolo! <em></em></td></tr>
   </tbody>
 </table>
 
