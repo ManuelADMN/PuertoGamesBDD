@@ -159,10 +159,3 @@ npx live-server public   # ó npx serve public
 
 <hr>
 
-<h2 align="center">✔️ Estado final: ¡100 % cumplido!</h2>
-
-<p align="center">
-  PuertoGames demuestra una solución <em>full‑stack serverless</em> con<br>
-  seguridad real, dashboard interactivo y un back‑end SQL avanzado.<br>
-  <strong>¡Gracias por revisar el proyecto — y que comience el juego!</strong> 🎉
-</p>
