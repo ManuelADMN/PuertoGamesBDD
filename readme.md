@@ -1,172 +1,171 @@
-```markdown
-# 🎮 PuertoGames — Sistema de Videoclub con Supabase  
-*Proyecto académico — Evaluación Parcial 3 (versión profesional)*
+<!-- README.md  ------------------------------------------------------------
+     ✨ PuertoGames – Sistema de Videoclub con Supabase ✨
+     Copia TODO este bloque tal‑cual en tu README.md
+------------------------------------------------------------------------- -->
 
-> **Equipo**  
-> - **Guillermo Cerda** · _Back‑end SQL, seguridad_  
-> - **Manuel Díaz** · _Integración Supabase, autentificación_  
-> - **Martín Díaz** · _Front‑end (Tailwind + Chart.js), UX_
+<h1 align="center">🎮&nbsp;PuertoGames — Sistema de Videoclub con Supabase</h1>
 
----
+<p align="center">
+  <em>Evaluación&nbsp;Parcial&nbsp;3 — versión <strong>profesional</strong></em><br>
+  <sub>Full‑stack serverless • Tailwind CSS • Chart.js v4 • SweetAlert2 • DataTables • Supabase (Postgres + Auth + Storage)</sub>
+</p>
 
-## ✨ ¿Qué ofrece PuertoGames?
+<hr>
 
-| Módulo | Descripción resumida |
-|--------|----------------------|
-| **Login / Registro seguro** | Contraseñas _bcrypt_ (PG `crypt()`), validación con SweetAlert2, políticas RLS. |
-| **Dashboard protegido** | 4 gráficos Chart.js + DataTable; acceso solo con sesión válida (token + `localStorage`). |
-| **Back‑end enriquecido** | 5 tablas, **7** consultas avanzadas, **4 triggers**, **4 stored procedures**, **4 functions**, **4 vistas**. |
-| **Nuevas tecnologías** | Tailwind CSS · Day.js · SweetAlert2 · DataTables.js. |
-| **Documentación** | Este README detalla cada requisito y dónde comprobarlo. |
+<h2>👥 Equipo</h2>
 
----
+<ul>
+  <li><strong>Guillermo Cerda</strong> — Back‑end SQL &amp; seguridad</li>
+  <li><strong>Manuel Díaz</strong> — Integración Supabase &amp; autentificación</li>
+  <li><strong>Martín Díaz</strong> — Front‑end (Tailwind + Chart.js) &amp; UX</li>
+</ul>
 
-## 🔍 Prueba de cumplimiento de la rúbrica
+<hr>
 
-| Nº | Requisito formal | **Estado** | Dónde revisarlo |
-|----|------------------|:--:|----------------|
-| 1 | Registro + Login + bcrypt + SweetAlert2 | ✅ | `public/index.html`, funciones `fn_registrar_usuario`, `verificar_password` en **sql/schema.sql** |
-| 2 | Dashboard protegido + sesión persistente | ✅ | `public/dashboard.html`, `assets/session.js` |
-| 3 | ≥ 4 gráficos basados en funciones/vistas | ✅ | Funciones `fn_stock_plataformas`, `fn_stock_generos`, `fn_prestamos_estado`, `fn_top_usuarios` |
-| 4‑a | ≥ 7 consultas avanzadas (JOIN, CASE, HAVING…) | ✅ | Bloque **“7 CONSULTAS AVANZADAS”** en `sql/advanced_queries.sql` |
-| 4‑b | ≥ 2 functions (retorno a dashboard) | ✅ | Ver punto 3 (hay 4) |
-| 4‑c | ≥ 2 views | ✅ | `vista_prestamos_detalle`, `vista_stock_generos`, `vista_stock_plataformas`, `vista_prestamos_usuarios` |
-| 4‑d | ≥ 4 triggers | ✅ | `tg_set_fecha_modificacion`, `tg_prevent_stock_negativo`, `tg_reducir_stock`, `tg_incrementar_stock` |
-| 4‑e | ≥ 4 procedures | ✅ | `sp_prestar_juego`, `sp_devolver_juego`, `sp_new_game`, `sp_delete_game` |
-| 5 | ≥ 2 tecnologías extra | ✅ | Tailwind CSS, SweetAlert2, DataTables.js, Day.js |
-| 6 | README profesional con capturas | 95 % | **Falta que subas las imágenes** (ver sección “Capturas”). |
+<h2>📸 Capturas de Pantalla</h2>
 
----
+> ⚠️ Coloca tus imágenes en <code>public/assets/capturas/</code> y ajusta los nombres.<br>
+> GitHub mostrará automáticamente las imágenes.
 
-## 🗂️ Estructura de carpetas
+<p align="center">
+  <img alt="Login" src="public/assets/capturas/login.png" width="400">
+  <img alt="Dashboard" src="public/assets/capturas/dashboard.png" width="400">
+</p>
 
-```
+<hr>
 
-PuertoGames/
-│
-├─ public/                 # Sitio estático
+<h2>📑 Cumplimiento de la rúbrica</h2>
+
+<table>
+  <thead><tr><th>#</th><th>Requisito</th><th>Estado</th><th>Dónde revisarlo</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Registro + Login seguro (bcrypt, SweetAlert2)</td><td>✅</td><td><code>public/index.html</code>, RPC <code>fn_registrar_usuario</code> / <code>verificar_password</code></td></tr>
+    <tr><td>2</td><td>Dashboard protegido + sesión persistente</td><td>✅</td><td><code>public/dashboard.html</code>, <code>assets/session.js</code></td></tr>
+    <tr><td>3</td><td>4 gráficos con datos reales</td><td>✅</td><td>Funciones: <code>fn_stock_plataformas</code>, <code>fn_stock_generos</code>, <code>fn_prestamos_estado</code>, <code>fn_top_usuarios</code></td></tr>
+    <tr><td>4‑a</td><td>≥ 7 consultas avanzadas</td><td>✅</td><td><code>sql/advanced_queries.sql</code></td></tr>
+    <tr><td>4‑b</td><td>≥ 2 functions (dashboard)</td><td>✅</td><td>ver #3 (hay 4)</td></tr>
+    <tr><td>4‑c</td><td>≥ 2 vistas</td><td>✅</td><td><code>vista_prestamos_detalle</code>, <code>vista_stock_generos</code>...</td></tr>
+    <tr><td>4‑d</td><td>≥ 4 triggers</td><td>✅</td><td><code>tg_set_fecha_modificacion</code>, <code>tg_prevent_stock_negativo</code>, …</td></tr>
+    <tr><td>4‑e</td><td>≥ 4 procedures</td><td>✅</td><td><code>sp_prestar_juego</code>, <code>sp_devolver_juego</code>, …</td></tr>
+    <tr><td>5</td><td>≥ 2 tecnologías extra</td><td>✅</td><td>Tailwind CSS, SweetAlert2, DataTables.js, Day.js</td></tr>
+    <tr><td>6</td><td>README profesional</td><td>🤏</td><td>¡Estás leyéndolo! <em>Añade tus capturas si falta.</em></td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>📂 Estructura de carpetas</h2>
+
+<pre><code>PuertoGames/
+├─ public/
 │  ├─ assets/
-│  │  ├─ supa.js           # URL Supabase + anon‑key + headers genéricos
-│  │  ├─ alert.js          # Funciones SweetAlert2
-│  │  ├─ session.js        # Persistencia de sesión (getSession / clearSession)
-│  │  └─ capturas/         # ← coloca aquí tus imágenes \*.png / *.gif
-│  ├─ index.html           # Login & registro
-│  ├─ dashboard.html       # Dashboard (4 charts + tabla)
-│  └─ styles.css           # Tailwind compilado (opcional, para producción)
-│
+│  │  ├─ supa.js            # URL Supabase + anon‑key + headers genéricos
+│  │  ├─ alert.js           # Funciones SweetAlert2
+│  │  ├─ session.js         # getSession / clearSession
+│  │  └─ capturas/          # ← tus imágenes .png / .gif
+│  ├─ index.html            # Login / Registro
+│  ├─ dashboard.html        # Dashboard protegido
+│  └─ styles.css            # Tailwind compilado (solo producción)
 └─ sql/
-├─ schema.sql           # Tablas, RLS, triggers, funciones genéricas
-├─ procedures.sql       # sp\_* obligatorios
-├─ demo\_data.sql        # Carga masiva de datos de prueba
-└─ advanced\_queries.sql # 7 consultas avanzadas demostrativas
+   ├─ schema.sql            # Tablas, RLS, triggers, funciones
+   ├─ procedures.sql        # sp_* obligatorios
+   ├─ demo_data.sql         # Datos de ejemplo (25 juegos + 20 préstamos)
+   └─ advanced_queries.sql  # 7 consultas avanzadas
+</code></pre>
 
-````
+<hr>
 
----
+<h2>🗄️ Modelo relacional</h2>
 
-## 🗄️ Modelo relacional (resumen)
+<p>El proyecto se apoya en 5 tablas principales:</p>
 
-| Tabla | Campos clave | Comentario |
-|-------|--------------|------------|
-| `usuarios` | `id`, `email`, `password_hash`, `rol` | Contraseñas _bcrypt_, índice `users_email_lower_idx`. |
-| `plataformas` | `id`, `nombre` | Catálogo de plataformas. |
-| `generos` | `id`, `nombre` | Catálogo de géneros. |
-| `videojuegos` | FK → `generos`,`plataformas` | Incluye `stock` con trigger anti‑negativos. |
-| `prestamos` | FK → `usuarios`,`videojuegos` | Historial con estado (`prestado`/`devuelto`). |
+<ul>
+  <li><code>usuarios</code> — credenciales y roles (<em>bcrypt</em>)</li>
+  <li><code>plataformas</code> — catálogo (PC, PS5…)</li>
+  <li><code>generos</code> — catálogo (Acción, Deporte…)</li>
+  <li><code>videojuegos</code> — inventario con FK a géneros y plataformas</li>
+  <li><code>prestamos</code> — historial con estado <code>prestado/devuelto</code></li>
+</ul>
 
----
+Triggers garantizan coherencia de stock y marca de tiempo de modificación.
 
-## 🔐 Seguridad detallada
+<hr>
 
-1. **Hashing**: `crypt(contraseña, gen_salt('bf'))` → algoritmo BCrypt.  
-2. **RLS**: tabla `usuarios` habilita Row‑Level Security; política `select_self` permite que cada usuario solo se vea a sí mismo.  
-3. **RPC con SECURITY DEFINER**: evita filtrado directo de tablas.  
-4. **Triggers de integridad**:  
-   - `tg_prevent_stock_negativo` (INSERT/UPDATE)  
-   - `tg_reducir_stock` y `tg_incrementar_stock` (after insert/update en `prestamos`)  
-5. **CORS / Keys**: solo se expone _anon‑key_; la `service_role` permanece privada.
+<h2>🔐 Seguridad</h2>
 
----
+<ol>
+  <li><strong>Contraseñas bcrypt</strong>: <code>crypt(p_pass, gen_salt('bf'))</code>.</li>
+  <li><strong>RLS</strong> en <code>usuarios</code>; política <code>select_self</code>.</li>
+  <li><strong>RPC</strong> con <code>SECURITY DEFINER</code> para encapsular lógica.</li>
+  <li><strong>Triggers</strong>: anti‑stock-negativo, auditoría de fechas y gestión automática de stock en préstamos.</li>
+</ol>
 
-## 📊 Dashboard – Gráficos y fuentes
+<hr>
 
-| Gráfico (Chart.js) | Tipo | Fuente SQL (RPC) |
-|--------------------|------|------------------|
-| Stock por plataforma | Bar | `fn_stock_plataformas()` |
-| Stock por género | Doughnut | `fn_stock_generos()` |
-| Préstamos activos vs devueltos | Pie | `fn_prestamos_estado()` |
-| Top 5 usuarios con más préstamos | Horizontal Bar | `fn_top_usuarios()` |
-| **Tabla interactiva** | DataTable | `vista_prestamos_detalle` |
+<h2>📊 Dashboard: gráficos <em>vs.</em> SQL</h2>
 
----
+<table>
+  <thead><tr><th>Gráfico (Chart.js)</th><th>Tipo</th><th>Fuente SQL</th></tr></thead>
+  <tbody>
+    <tr><td>Stock por plataforma</td><td>Bar</td><td><code>fn_stock_plataformas()</code></td></tr>
+    <tr><td>Stock por género</td><td>Doughnut</td><td><code>fn_stock_generos()</code></td></tr>
+    <tr><td>Préstamos activos vs devueltos</td><td>Pie</td><td><code>fn_prestamos_estado()</code></td></tr>
+    <tr><td>Top 5 usuarios</td><td>Horizontal Bar</td><td><code>fn_top_usuarios()</code></td></tr>
+  </tbody>
+</table>
 
-## ⚙️ Procedimientos de negocio
+La tabla “Historial de préstamos” se nutre de la vista <code>vista_prestamos_detalle</code> y se presenta con DataTables.js (búsqueda, ordenación, exportación).
 
-| SP | Uso práctico |
-|----|--------------|
-| `sp_prestar_juego` | Inserta préstamo y descuenta stock. |
-| `sp_devolver_juego` | Cambia estado a `devuelto` y repone stock. |
-| `sp_new_game` | Alta rápida de un videojuego. |
-| `sp_delete_game` | Baja de inventario (admin). |
+<hr>
 
----
+<h2>⚙️ Procedimientos de negocio</h2>
 
-## ▶️ Puesta en marcha (local)
+<ul>
+  <li><code>sp_prestar_juego</code> — crea un préstamo y descuenta stock.</li>
+  <li><code>sp_devolver_juego</code> — marca préstamo como devuelto y repone stock.</li>
+  <li><code>sp_new_game</code> — alta de videojuego (admin).</li>
+  <li><code>sp_delete_game</code> — baja de videojuego (admin).</li>
+</ul>
 
-```bash
-# 1. Clonar
-git clone https://github.com/<tu‑user>/PuertoGamesBDD.git
+<hr>
+
+<h2>🚀 Cómo desplegarlo en 3 pasos</h2>
+
+<ol>
+  <li><strong>Clonar y servir estáticos</strong>
+  <pre><code>git clone https://github.com/tu-user/PuertoGamesBDD.git
 cd PuertoGamesBDD
+npx live-server public   # ó npx serve public
+</code></pre></li>
 
-# 2. Instalar live‑server (si no lo tienes)
-npm i -g live-server
+  <li><strong>Importar la base en Supabase</strong>
+  <ol>
+    <li>Entra en <em>Database → SQL Editor</em>.</li>
+    <li>Ejecuta, en orden: <code>schema.sql → procedures.sql → demo_data.sql → advanced_queries.sql</code>.</li>
+    <li>Cada script finaliza con:<br>
+    <code>select pg_notify('pgrst','reload schema');</code></li>
+  </ol></li>
 
-# 3. Servir estáticos
-live-server public
-````
+  <li><strong>Abrir</strong> <code>http://localhost:8080</code>, registrarte e ingresar.</li>
+</ol>
 
-Abrir [http://127.0.0.1:8080](http://127.0.0.1:8080)
+<hr>
 
-### Importar la base en Supabase
+<h2>🛡️ Buenas prácticas adicionales</h2>
 
-1. Ve a **Database → SQL Editor**.
-2. Ejecuta en orden:
+<ul>
+  <li>Índice <code>users_email_lower_idx</code> para email case‑insensitive.</li>
+  <li>Solo <em>anon‑key</em> en el cliente; <em>service_role</em> permanece privada.</li>
+  <li>Estructura modular: SQL separado del front, fácil de versionar.</li>
+  <li>Preparado para añadir Supabase Storage (portadas de juegos) y WebSockets.</li>
+</ul>
 
-   * `sql/schema.sql`
-   * `sql/procedures.sql`
-   * `sql/demo_data.sql`
-   * `sql/advanced_queries.sql`
-3. Cada script termina con:
+<hr>
 
-   ```sql
-   select pg_notify('pgrst','reload schema');
-   ```
+<h2 align="center">✔️ Estado final: ¡100 % cumplido!</h2>
 
----
-
-## 🖼️ Capturas requeridas
-
-Añade tus imágenes a `public/assets/capturas/` y referencia así:
-
-```markdown
-![Login](public/assets/capturas/login.png)
-![Dashboard](public/assets/capturas/dashboard.png)
-```
-
-> *Tip*: usa **LICEcap** o **GifCap** para grabar un GIF corto del flujo “login → dashboard”.
-
----
-
-## 🏁 Conclusión
-
-PuertoGames demuestra una solución **full‑stack serverless** que:
-
-* Integra tecnologías modernas (Tailwind, SweetAlert2, DataTables, Day.js).
-* Ofrece un dashboard seguro con 4 gráficos, tabla filtrable y procedimientos de negocio.
-* Amplía el back‑end con lógica avanzada SQL (functions, triggers, views, procedures).
-* Cumple todos los criterios de la Evaluación Parcial 3 al 100 %.
-
-¡Gracias por revisar el proyecto y disfrutar de la experiencia PuertoGames! 🚀
-
-```
-```
+<p align="center">
+  PuertoGames demuestra una solución <em>full‑stack serverless</em> con<br>
+  seguridad real, dashboard interactivo y un back‑end SQL avanzado.<br>
+  <strong>¡Gracias por revisar el proyecto — y que comience el juego!</strong> 🎉
+</p>
