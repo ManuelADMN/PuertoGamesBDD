@@ -25,8 +25,8 @@
 > GitHub mostrará automáticamente las imágenes.
 
 <p align="center">
-  <img alt="Login" src="public/assets/capturas/login.png" width="400">
-  <img alt="Dashboard" src="public/assets/capturas/dashboard.png" width="400">
+  <img alt="Login" src="assets/capturas/login.png" width="400">
+  <img alt="Dashboard" src="assets/capturas/dashboard.png" width="400">
 </p>
 
 <hr>
