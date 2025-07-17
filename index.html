@@ -5,10 +5,10 @@
   <meta charset="UTF-8">
   <title>PuertoGames – Login</title>
 
-  <!-- Tailwind (solo para desarrollo) -->
+  <!-- Tailwind (dev) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- SweetAlert2 CSS (imprescindible para ver los pop-ups) -->
+  <!-- SweetAlert2 -->
   <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
@@ -56,85 +56,61 @@
 
   <!-- Lógica -->
   <script type="module">
-    import { SUPABASE_URL, HEADERS }   from './assets/supa.js';
-    import { alertError, alertInfo,
-             alertSuccess, showLoader, closeLoader } from './assets/alert.js';
+  import { signIn, signUp } from './assets/auth.js';
+  import { alertError, alertInfo, alertSuccess } from './assets/alert.js';
 
-    /* ---- Tabs ---- */
-    const showTab = id => {
-      console.log('🐞 tab ->', id);
-      document.querySelectorAll('.tab').forEach(t => t.classList.add('hidden'));
-      document.getElementById(id)?.classList.remove('hidden');
-      document.querySelectorAll('.tab-btn')
-        .forEach(b => b.classList.toggle('border-blue-600', b.dataset.tab === id));
-    };
+  /* -------- Tabs -------- */
+  const showTab = id => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.add('hidden'));
+    document.getElementById(id)?.classList.remove('hidden');
+    document.querySelectorAll('.tab-btn')
+      .forEach(b => b.classList.toggle('border-blue-600', b.dataset.tab === id));
+  };
 
-    window.addEventListener('DOMContentLoaded', () => {
-      /* Botones pestaña */
-      document.querySelectorAll('.tab-btn')
-        .forEach(btn => btn.onclick = () => {
-          console.log('🐞 click tab-btn', btn.dataset.tab);
-          showTab(btn.dataset.tab);
-        });
-      showTab('loginTab');
+  window.addEventListener('DOMContentLoaded', () => {
+    /* Botones pestaña */
+    document.querySelectorAll('.tab-btn')
+      .forEach(btn => btn.onclick = () => showTab(btn.dataset.tab));
+    showTab('loginTab');
 
-      /* Mostrar / ocultar contraseña */
-      document.querySelectorAll('.toggle-pwd')
-        .forEach(btn => btn.onclick = () => {
-          const inp = btn.previousElementSibling;
-          inp.type = inp.type === 'password' ? 'text' : 'password';
-        });
-
-      /* ========== LOGIN ========== */
-      document.getElementById('loginTab').addEventListener('submit', async e => {
-        e.preventDefault();
-        const f     = e.target,
-              email = f.email.value.trim().toLowerCase(),
-              pass  = f.password.value;
-
-        console.log('🐞 login payload', { correo_input: email, password_input: pass });
-        showLoader();
-        const res  = await fetch(`${SUPABASE_URL}/rest/v1/rpc/verificar_password`, {
-          method : 'POST',
-          headers: HEADERS,
-          body   : JSON.stringify({ correo_input: email, password_input: pass })
-        });
-        console.log('🐞 login status', res.status);
-        const data = await res.json();
-        console.log('🐞 login response', data);
-        closeLoader();
-
-        if (!data.success) return alertError(data.message);
-        localStorage.setItem('usuario', JSON.stringify(data.usuario));
-        alertSuccess('Bienvenido', () => location = 'dashboard.html');
+    /* Mostrar / ocultar contraseña */
+    document.querySelectorAll('.toggle-pwd')
+      .forEach(btn => btn.onclick = () => {
+        const inp = btn.previousElementSibling;
+        inp.type = inp.type === 'password' ? 'text' : 'password';
       });
 
-      /* ========== REGISTRO ========== */
-      document.getElementById('regTab').addEventListener('submit', async e => {
-        e.preventDefault();
-        const f     = e.target,
-              email = f.email.value.trim().toLowerCase(),
-              p1    = f.password.value,
-              p2    = f.password2.value;
+    /* ========== LOGIN ========== */
+    document.getElementById('loginTab').addEventListener('submit', async e => {
+      e.preventDefault();
+      const f     = e.target,
+            email = f.email.value.trim().toLowerCase(),
+            pass  = f.password.value;
 
-        if (p1 !== p2) return alertInfo('Las contraseñas no coinciden');
+      const data = await signIn(email, pass);          // ← RPC
+      if (!data.success) return alertError(data.message);
 
-        console.log('🐞 registro payload', { p_email: email, p_pass: p1 });
-        showLoader('Creando usuario…');
-        const res  = await fetch(`${SUPABASE_URL}/rest/v1/rpc/fn_registrar_usuario`, {
-          method : 'POST',
-          headers: HEADERS,
-          body   : JSON.stringify({ p_email: email, p_pass: p1 })
-        });
-        console.log('🐞 registro status', res.status);
-        const data = await res.json();
-        console.log('🐞 registro response', data);
-        closeLoader();
-
-        if (!data.success) return alertError(data.message);
-        alertSuccess('Cuenta creada', () => { f.reset(); showTab('loginTab'); });
-      });
+      localStorage.setItem('usuario', JSON.stringify(data.usuario));
+      alertSuccess('Bienvenido', () => location = 'dashboard.html');
     });
-  </script>
+
+    /* ========== REGISTRO ========== */
+    document.getElementById('regTab').addEventListener('submit', async e => {
+      e.preventDefault();
+      const f     = e.target,
+            email = f.email.value.trim().toLowerCase(),
+            p1    = f.password.value,
+            p2    = f.password2.value;
+
+      if (p1 !== p2) return alertInfo('Las contraseñas no coinciden');
+
+      const data = await signUp(email, p1);            // ← RPC
+      if (!data.success) return alertError(data.message);
+
+      alertSuccess('Cuenta creada', () => { f.reset(); showTab('loginTab'); });
+    });
+  });
+</script>
+
 </body>
 </html>

@@ -5,15 +5,25 @@
   <meta charset="UTF-8">
   <title>Dashboard</title>
 
-  <!-- Tailwind CDN (dev) -->
+  <!-- Tailwind (dev) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- SweetAlert2 CSS -->
+  <!-- SweetAlert2 -->
   <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- DataTables + jQuery -->
+  <link rel="stylesheet"
+        href="https://cdn.datatables.net/1.13.4/css/dataTables.tailwind.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/dataTables.tailwind.min.js"></script>
+
+  <!-- Day.js -->
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.9/dayjs.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
   <!-- --------------- Barra superior ---------------- -->
@@ -27,62 +37,82 @@
   </header>
 
   <!-- --------------- Contenido ---------------- -->
-  <main class="flex-1 p-6 grid gap-8
-               md:grid-cols-2        <!-- 2 columnas en pantallas ≥ md -->
-               grid-cols-1">         <!-- 1 columna en móviles -->
+  <main class="flex-1 p-6 space-y-8">
 
-    <!-- Tarjeta 1 -->
-    <div class="bg-white shadow rounded-xl p-4">
-      <h2 class="font-semibold mb-4 text-center">Stock por plataforma</h2>
-      <!-- El wrapper define el alto; Chart.js se ajusta con maintainAspectRatio:false -->
-      <div class="h-72">
-        <canvas id="grafPlata" class="w-full h-full"></canvas>
+    <!-- ---------- Grid de gráficos ---------- -->
+    <section class="grid gap-8 md:grid-cols-2 grid-cols-1">
+      <div class="bg-white shadow rounded-xl p-4">
+        <h2 class="font-semibold mb-4 text-center">Stock por plataforma</h2>
+        <div class="h-72"><canvas id="grafPlata" class="w-full h-full"></canvas></div>
       </div>
-    </div>
 
-    <!-- Tarjeta 2 -->
-    <div class="bg-white shadow rounded-xl p-4">
-      <h2 class="font-semibold mb-4 text-center">Stock por género</h2>
-      <div class="h-72">
-        <canvas id="grafGenero" class="w-full h-full"></canvas>
+      <div class="bg-white shadow rounded-xl p-4">
+        <h2 class="font-semibold mb-4 text-center">Stock por género</h2>
+        <div class="h-72"><canvas id="grafGenero" class="w-full h-full"></canvas></div>
       </div>
-    </div>
+
+      <div class="bg-white shadow rounded-xl p-4">
+        <h2 class="font-semibold mb-4 text-center">Préstamos: activos vs devueltos</h2>
+        <div class="h-72"><canvas id="grafEstado" class="w-full h-full"></canvas></div>
+      </div>
+
+      <div class="bg-white shadow rounded-xl p-4">
+        <h2 class="font-semibold mb-4 text-center">Top‑5 usuarios con más préstamos</h2>
+        <div class="h-72"><canvas id="grafTop" class="w-full h-full"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ---------- Tabla de préstamos ---------- -->
+    <section class="bg-white shadow rounded-xl p-4">
+      <h2 class="font-semibold mb-4 text-center">Historial de préstamos</h2>
+      <table id="tblLoans" class="display w-full text-sm"></table>
+    </section>
   </main>
 
   <!-- --------------- JS ---------------- -->
   <script type="module">
-    import { SUPABASE_URL, HEADERS }   from './assets/supa.js';
+    import { SUPABASE_URL, HEADERS } from './assets/supa.js';
     import { alertError, alertInfo,
              alertConfirm, showLoader, closeLoader } from './assets/alert.js';
+    import { getSession, clearSession } from './assets/session.js';
 
-    /* --- Ruta protegida --- */
-    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    /* ---------- Sesión protegida ---------- */
+    let usuario = getSession();
+    /* fallback: si no existe token aún pero quedó el objeto antiguo */
+    if (!usuario) {
+      try { usuario = JSON.parse(localStorage.getItem('usuario')); }
+      catch { /* nada */ }
+    }
     if (!usuario) location = 'index.html';
 
     window.addEventListener('DOMContentLoaded', cargar);
 
     async function cargar () {
-      document.getElementById('saludo').textContent = usuario.email;
-      showLoader('Cargando gráficos…');
+      document.getElementById('saludo').textContent = usuario.email ?? 'Invitado';
+      showLoader('Cargando dashboard…');
 
-      /* RPC stock plataforma */
+      /* Peticiones paralelas */
       const rPlata  = fetch(`${SUPABASE_URL}/rest/v1/rpc/fn_stock_plataformas`,
                             { method:'POST', headers: HEADERS, body:'{}' });
-
-      /* RPC stock géneros */
       const rGenero = fetch(`${SUPABASE_URL}/rest/v1/rpc/fn_stock_generos`,
                             { method:'POST', headers: HEADERS, body:'{}' });
+      const rEstado = fetch(`${SUPABASE_URL}/rest/v1/rpc/fn_prestamos_estado`,
+                            { method:'POST', headers: HEADERS, body:'{}' });
+      const rTop    = fetch(`${SUPABASE_URL}/rest/v1/rpc/fn_top_usuarios`,
+                            { method:'POST', headers: HEADERS, body:'{}' });
+      const rTabla  = fetch(`${SUPABASE_URL}/rest/v1/vista_prestamos_detalle`,
+                            { headers: { ...HEADERS, Prefer:'count=exact' }});
 
-      /* Esperar ambas */
-      const [resPl, resGn] = await Promise.all([rPlata, rGenero]);
+      const [resPl, resGn, resEs, resTop, resTb] =
+            await Promise.all([rPlata, rGenero, rEstado, rTop, rTabla]);
       closeLoader();
 
-      if (!resPl.ok || !resGn.ok)
-        return alertError('No se pudo cargar datos');
+      if (![resPl, resGn, resEs, resTop, resTb].every(r => r.ok))
+        return alertError('Error cargando datos del dashboard');
 
-      /* ------------------ Gráfico 1 ------------------ */
+      /* ---------- Gráfico 1 ---------- */
       const datosPl = await resPl.json();
-      new Chart(document.getElementById('grafPlata'), {
+      new Chart(grafPlata, {
         type : 'bar',
         data : {
           labels   : datosPl.map(d => d.nombre_plataforma),
@@ -94,37 +124,73 @@
             borderWidth     : 1,
           }]
         },
-        options : {
-          responsive        : true,
-          maintainAspectRatio: false,      // ← llena el wrapper de  h-72
-          scales: { y: { beginAtZero: true } }
-        }
+        options : { responsive:true, maintainAspectRatio:false,
+                    scales:{ y:{ beginAtZero:true } } }
       });
 
-      /* ------------------ Gráfico 2 ------------------ */
+      /* ---------- Gráfico 2 ---------- */
       const datosGn = await resGn.json();
-      new Chart(document.getElementById('grafGenero'), {
+      new Chart(grafGenero, {
         type : 'doughnut',
         data : {
           labels   : datosGn.map(d => d.nombre_genero),
           datasets : [{ data: datosGn.map(d => d.total) }]
         },
-        options : {
-          responsive         : true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom' }
-          }
-        }
+        options : { responsive:true, maintainAspectRatio:false,
+                    plugins:{ legend:{ position:'bottom' } } }
       });
 
-      alertInfo('Gráficos cargados');
+      /* ---------- Gráfico 3 ---------- */
+      const datosEs = await resEs.json();
+      new Chart(grafEstado, {
+        type : 'pie',
+        data : {
+          labels   : datosEs.map(d => d.status),
+          datasets : [{ data: datosEs.map(d => d.qty) }]
+        },
+        options : { responsive:true, maintainAspectRatio:false,
+                    plugins:{ legend:{ position:'bottom' } } }
+      });
+
+      /* ---------- Gráfico 4 ---------- */
+      const datosTop = await resTop.json();
+      new Chart(grafTop, {
+        type : 'bar',
+        data : {
+          labels   : datosTop.map(d => d.nombre_usuario),
+          datasets : [{
+            label           : 'Préstamos',
+            data            : datosTop.map(d => d.total_prestamos),
+            backgroundColor : 'rgba(16,185,129,0.5)',
+            borderColor     : 'rgba(16,185,129,1)',
+            borderWidth     : 1,
+          }]
+        },
+        options : { indexAxis:'y', responsive:true, maintainAspectRatio:false }
+      });
+
+      /* ---------- DataTable ---------- */
+      const prestamos = await resTb.json();
+      $('#tblLoans').DataTable({
+        data: prestamos,
+        columns: [
+          { title:'Usuario',    data:'usuario' },
+          { title:'Videojuego', data:'videojuego' },
+          { title:'Prestado',   data:'fecha_prestamo',
+            render:d => d ? dayjs(d).format('DD/MM/YYYY HH:mm') : '' },
+          { title:'Devuelto',   data:'fecha_devolucion',
+            render:d => d ? dayjs(d).format('DD/MM/YYYY HH:mm') : 'Pendiente' }
+        ]
+      });
+
+      alertInfo('Dashboard listo');
     }
 
     /* --- Logout --- */
     document.getElementById('logout').onclick = async () => {
       if (await alertConfirm('¿Cerrar sesión?')) {
-        localStorage.clear();
+        clearSession();      // limpia token + expiración
+        localStorage.removeItem('usuario'); // legacy
         location = 'index.html';
       }
     };
