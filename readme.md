@@ -21,9 +21,6 @@
 
 <h2>📸 Capturas de Pantalla</h2>
 
-> ⚠️ Coloca tus imágenes en <code>public/assets/capturas/</code> y ajusta los nombres.<br>
-> GitHub mostrará automáticamente las imágenes.
-
 <p align="center">
   <img alt="Login" src="assets/capturas/login.png" width="400">
   <img alt="Dashboard" src="assets/capturas/dashboard.png" width="400">
