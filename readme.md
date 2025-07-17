@@ -12,9 +12,9 @@
 <h2>👥 Equipo</h2>
 
 <ul>
-  <li><strong>Guillermo Cerda</strong> — Back‑end SQL &amp; seguridad</li>
-  <li><strong>Manuel Díaz</strong> — Integración Supabase &amp; autentificación</li>
-  <li><strong>Martín Díaz</strong> — Front‑end (Tailwind + Chart.js) &amp; UX</li>
+  <li><strong>Guillermo Cerda</strong> &amp; </li>
+  <li><strong>Manuel Díaz</strong>  &amp; n</li>
+  <li><strong>Martín Díaz</strong> &amp; </li>
 </ul>
 
 <hr>
@@ -142,17 +142,6 @@ npx live-server public   # ó npx serve public
 
   <li><strong>Abrir</strong> <code>http://localhost:8080</code>, registrarte e ingresar.</li>
 </ol>
-
-<hr>
-
-<h2>🛡️ Buenas prácticas adicionales</h2>
-
-<ul>
-  <li>Índice <code>users_email_lower_idx</code> para email case‑insensitive.</li>
-  <li>Solo <em>anon‑key</em> en el cliente; <em>service_role</em> permanece privada.</li>
-  <li>Estructura modular: SQL separado del front, fácil de versionar.</li>
-  <li>Preparado para añadir Supabase Storage (portadas de juegos) y WebSockets.</li>
-</ul>
 
 <hr>
 
