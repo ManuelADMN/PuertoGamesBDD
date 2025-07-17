@@ -1,12 +1,9 @@
-<!-- README.md  ------------------------------------------------------------
-     ✨ PuertoGames – Sistema de Videoclub con Supabase ✨
-     Copia TODO este bloque tal‑cual en tu README.md
-------------------------------------------------------------------------- -->
+
 
 <h1 align="center">🎮&nbsp;PuertoGames — Sistema de Videoclub con Supabase</h1>
 
 <p align="center">
-  <em>Evaluación&nbsp;Parcial&nbsp;3 — versión <strong>profesional</strong></em><br>
+  <em>Evaluación&nbsp;Transversal&nbsp;</em><br>
   <sub>Full‑stack serverless • Tailwind CSS • Chart.js v4 • SweetAlert2 • DataTables • Supabase (Postgres + Auth + Storage)</sub>
 </p>
 
