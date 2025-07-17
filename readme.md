@@ -12,9 +12,9 @@
 <h2>👥 Equipo</h2>
 
 <ul>
-  <li><strong>Guillermo Cerda</strong> &amp; </li>
-  <li><strong>Manuel Díaz</strong>  &amp; n</li>
-  <li><strong>Martín Díaz</strong> &amp; </li>
+  <li><strong>Guillermo Cerda</strong> </li>
+  <li><strong>Manuel Díaz</strong></li>
+  <li><strong>Martín Díaz</strong></li>
 </ul>
 
 <hr>
